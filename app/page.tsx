@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowUpRight, Bookmark, Clock3, Heart, Search, X } from "lucide-react";
 
 type Story = {
-  id: number;
+  id: string | number;
+  slug?: string;
   category: string;
   title: string;
   summary: string;
@@ -17,7 +18,7 @@ type Story = {
 const image = (id: string, w = 900) =>
   `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=85`;
 
-const stories: Story[] = [
+const demoStories: Story[] = [
   {
     id: 1, category: "Politik", title: "Wie Städte den Wandel gestalten – und wer ihn bezahlt",
     summary: "Kommunen stehen vor großen Entscheidungen. Ein Blick auf Finanzierung, Prioritäten und die Folgen für den Alltag.",
@@ -60,6 +61,7 @@ const categories = ["Alle", "Politik", "Welt", "Wirtschaft", "Wissenschaft", "Di
 const navItems = ["Aktuell", "Deutschland", "Welt", "Wirtschaft", "Wissenschaft", "Digital", "Hintergründe", "Meinung"];
 
 export default function Home() {
+  const [stories, setStories] = useState<Story[]>(demoStories);
   const [category, setCategory] = useState("Alle");
   const [query, setQuery] = useState("");
   const [saved, setSaved] = useState<number[]>([]);
@@ -88,6 +90,19 @@ export default function Home() {
       setDonationLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetch("/api/articles").then((response) => response.ok ? response.json() : []).then((articles) => {
+      if (Array.isArray(articles) && articles.length) {
+        setStories(articles.map((article) => ({
+          id: article.id, slug: article.slug, category: article.category, title: article.title,
+          summary: article.standfirst, time: article.publishedAt ? new Date(article.publishedAt).toLocaleDateString("de-DE") : "Aktuell",
+          read: `${article.readingMinutes} Min.`, author: article.author || "Pulse Redaktion",
+          image: article.imageUrl || image("photo-1486406146926-c627a92ad1ab"),
+        })));
+      }
+    }).catch(() => undefined);
+  }, []);
 
   const filtered = useMemo(() => stories.filter((story) => {
     const matchesCategory = category === "Alle" || story.category === category;
@@ -187,7 +202,7 @@ export default function Home() {
                     <div className="article-thumb" style={{ backgroundImage: `url("${story.image}")` }} />
                     <div>
                       <div className="article-category">{story.category} <span style={{ color: "#b3b8b9" }}>·</span> Beispielbeitrag</div>
-                      <h3 className="article-title">{story.title}</h3>
+                      <h3 className="article-title">{story.slug ? <a href={`/artikel/${story.slug}`}>{story.title}</a> : story.title}</h3>
                       <p className="article-summary">{story.summary}</p>
                       <div className="article-foot"><span>{story.time}</span><span>·</span><span><Clock3 size={10} style={{ verticalAlign: "middle", marginRight: 3 }} />{story.read} Lesezeit</span><span>·</span><span>{story.author}</span>
                         <button className={saved.includes(story.id) ? "bookmark saved" : "bookmark"} aria-label={saved.includes(story.id) ? "Aus Merkliste entfernen" : "Zur Merkliste hinzufügen"} onClick={() => toggleSaved(story.id)}><Bookmark size={15} fill={saved.includes(story.id) ? "currentColor" : "none"} /></button>
@@ -230,7 +245,7 @@ export default function Home() {
       <footer className="footer">
         <div className="footer-inner">
           <div><div className="footer-brand">pulse.</div><p className="footer-copy">Nachrichten mit Zusammenhang. Unabhängiger Journalismus, nachvollziehbare Quellen und offene Zugänge – getragen von einer Gemeinschaft, die informiert bleiben will.</p></div>
-          <div className="footer-links"><a href="#aktuelle-themen">Redaktion</a><a href="#aktuelle-themen">Quellen & Standards</a><a href="#aktuelle-themen">Transparenz</a><a href="#aktuelle-themen">Kontakt</a></div>
+          <div className="footer-links"><a href="/standards">Redaktionelle Standards</a><a href="/standards">Quellen & Transparenz</a><a href="/standards">Korrekturen</a><a href="mailto:redaktion@pulse.example">Kontakt</a></div>
         </div>
       </footer>
 
