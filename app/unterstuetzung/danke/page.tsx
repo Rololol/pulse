@@ -25,7 +25,7 @@ export default async function DonationThanks({ searchParams }: Props) {
         <Link href="/" style={{ fontFamily: "Georgia,serif", fontSize: 26, fontWeight: 700 }}>pulse.</Link>
         <h1 style={{ margin: "30px 0 12px", fontFamily: "Georgia,serif", fontSize: 36, lineHeight: 1.1 }}>{confirmed ? "Danke, dass du Pulse unterstützt." : "Deine Unterstützung wird geprüft."}</h1>
         <p style={{ color: "#68737c", fontSize: 14, lineHeight: 1.7 }}>{confirmed ? "Die Zahlung wurde von Stripe als abgeschlossen bestätigt. Deine Unterstützung hilft, unabhängige Berichterstattung zugänglich zu halten." : "Wir konnten den Zahlungsstatus noch nicht bestätigen. Falls du gerade bezahlt hast, prüfe bitte auch die Bestätigung von Stripe."}</p>
-        <Link href="/" style={{ display: "inline-block", marginTop: 18, padding: "12px 17px", borderRadius: 4, background: "#142332", color: "#fff", fontSize: 12, fontWeight: 700 }}>Zur Startseite</Link>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 18 }}><Link href="/" style={{ display: "inline-block", padding: "12px 17px", borderRadius: 4, background: "#142332", color: "#fff", fontSize: 12, fontWeight: 700 }}>Zur Startseite</Link>{confirmed && sessionId && <Link href={`/api/donations/portal?session_id=${encodeURIComponent(sessionId)}`} style={{ display: "inline-block", padding: "12px 17px", borderRadius: 4, border: "1px solid #d8d8d3", color: "#17212b", fontSize: 12, fontWeight: 700 }}>Monatliche Unterstützung verwalten</Link>}</div>
       </section>
     </main>
   );
