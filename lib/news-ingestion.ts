@@ -68,7 +68,7 @@ export async function ingestConfiguredFeeds() {
             category: "Aktuell",
             status: "DRAFT",
             imageUrl,
-            publishedAt,
+            sourcePublishedAt: published,
             sources: { create: { sourceId: source.id, sourceUrl: link, title } },
           },
         });
