@@ -42,7 +42,7 @@ Allowed states are `IN_REVIEW`, `PUBLISHED`, and `ARCHIVED`. Publication is bloc
 ## Donations
 Set `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` and `NEXT_PUBLIC_SITE_URL`. Configure a Stripe webhook pointing to `/api/donations/webhook` for `checkout.session.completed` and `checkout.session.expired`. Donations use hosted Stripe Checkout; the application never handles card details.
 
-Before accepting recurring support in production, configure and test the Stripe customer self-service/cancellation experience and the applicable legal disclosures.
+Configure the Stripe Customer Portal in the Stripe dashboard before accepting recurring support. The confirmation page exposes a session-bound portal link at `/api/donations/portal` so supporters can manage or cancel monthly support. Test cancellation and webhook status changes in Stripe test mode first.
 
 ## Production checklist
 - Provision PostgreSQL and run Prisma migrations.
