@@ -64,7 +64,7 @@ export default function Home() {
   const [stories, setStories] = useState<Story[]>(demoStories);
   const [category, setCategory] = useState("Alle");
   const [query, setQuery] = useState("");
-  const [saved, setSaved] = useState<number[]>([]);
+  const [saved, setSaved] = useState<Array<string | number>>([]);
   const [donationOpen, setDonationOpen] = useState(false);
   const [amount, setAmount] = useState(5);
   const [donationType, setDonationType] = useState<"once" | "monthly">("once");
