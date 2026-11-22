@@ -108,8 +108,9 @@ export default function Home() {
     const matchesCategory = category === "Alle" || story.category === category;
     const q = query.trim().toLowerCase();
     const matchesQuery = !q || `${story.title} ${story.summary} ${story.category}`.toLowerCase().includes(q);
-    return matchesCategory && matchesQuery;
-  }), [category, query]);
+    const matchesSaved = activeNav !== "Merkliste" || saved.includes(story.id);
+    return matchesCategory && matchesQuery && matchesSaved;
+  }), [category, query, stories, activeNav, saved]);
 
   const toggleSaved = (id: number) => setSaved((current) =>
     current.includes(id) ? current.filter((item) => item !== id) : [...current, id]
