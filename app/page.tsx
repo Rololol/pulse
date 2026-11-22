@@ -112,7 +112,7 @@ export default function Home() {
     return matchesCategory && matchesQuery && matchesSaved;
   }), [category, query, stories, activeNav, saved]);
 
-  const toggleSaved = (id: number) => setSaved((current) =>
+  const toggleSaved = (id: string | number) => setSaved((current) =>
     current.includes(id) ? current.filter((item) => item !== id) : [...current, id]
   );
 
