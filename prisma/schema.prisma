@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ArticleStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+enum UserRole {
+  READER
+  JOURNALIST
+  EDITOR
+  ADMIN
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  name         String?
+  role         UserRole      @default(READER)
+  createdAt    DateTime      @default(now())
+  bookmarks    Bookmark[]
+  preferences  Preference?
+}
+
+model Article {
+  id              String        @id @default(cuid())
+  slug            String        @unique
+  title           String
+  standfirst      String
+  body            String        @db.Text
+  imageUrl        String?
+  category        String
+  status          ArticleStatus @default(DRAFT)
+  isBreaking      Boolean       @default(false)
+  isFeatured      Boolean       @default(false)
+  readingMinutes  Int           @default(3)
+  publishedAt     DateTime?
+  updatedAt       DateTime      @updatedAt
+  createdAt       DateTime      @default(now())
+  author          String?
+  sources         ArticleSource[]
+  bookmarks       Bookmark[]
+  @@index([status, publishedAt])
+  @@index([category, publishedAt])
+}
+
+model Source {
+  id          String          @id @default(cuid())
+  name        String
+  url         String          @unique
+  feedUrl     String?
+  isActive    Boolean         @default(true)
+  trustNote   String?
+  createdAt   DateTime        @default(now())
+  articles    ArticleSource[]
+}
+
+model ArticleSource {
+  articleId String
+  sourceId  String
+  sourceUrl String
+  title     String?
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  source    Source  @relation(fields: [sourceId], references: [id])
+  @@id([articleId, sourceId])
+}
+
+model Bookmark {
+  userId    String
+  articleId String
+  createdAt DateTime @default(now())
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  @@id([userId, articleId])
+}
+
+model Preference {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  categories  String[]
+  digestEmail Boolean  @default(false)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Donation {
+  id                    String   @id @default(cuid())
+  amountCents           Int
+  currency              String   @default("eur")
+  provider               String   @default("stripe")
+  providerPaymentId      String?  @unique
+  supporterEmail         String?
+  isRecurring            Boolean  @default(false)
+  status                 String   @default("pending")
+  createdAt              DateTime @default(now())
+}
