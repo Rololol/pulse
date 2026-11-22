@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowUpRight, Bookmark, Check, Clock3, Heart, Search, X } from "lucide-react";
+import { ArrowUpRight, Bookmark, Clock3, Heart, Search, X } from "lucide-react";
 
 type Story = {
   id: number;
@@ -67,6 +67,27 @@ export default function Home() {
   const [amount, setAmount] = useState(5);
   const [donationType, setDonationType] = useState<"once" | "monthly">("once");
   const [activeNav, setActiveNav] = useState("Aktuell");
+  const [donationMessage, setDonationMessage] = useState("");
+  const [donationLoading, setDonationLoading] = useState(false);
+
+  const startDonation = async () => {
+    setDonationLoading(true);
+    setDonationMessage("");
+    try {
+      const response = await fetch("/api/donations/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount, cadence: donationType }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.url) throw new Error(result.error || "Checkout konnte nicht gestartet werden.");
+      window.location.assign(result.url);
+    } catch (error) {
+      setDonationMessage(error instanceof Error ? error.message : "Ein Fehler ist aufgetreten.");
+    } finally {
+      setDonationLoading(false);
+    }
+  };
 
   const filtered = useMemo(() => stories.filter((story) => {
     const matchesCategory = category === "Alle" || story.category === category;
@@ -223,8 +244,9 @@ export default function Home() {
             <button className={donationType === "monthly" ? "filter-chip selected" : "filter-chip"} onClick={() => setDonationType("monthly")}>Monatlich</button>
           </div>
           <div className="amount-grid">{[2, 5, 10, 25].map((value) => <button key={value} className={amount === value ? "amount-option chosen" : "amount-option"} onClick={() => setAmount(value)}>{value} €</button>)}</div>
-          <button className="modal-submit" onClick={() => alert("Die Zahlung ist in dieser Entwicklungsfassung noch nicht aktiviert. Stripe wird nach Einrichtung der Händler- und Webhook-Zugangsdaten verbunden.")}>Mit {amount} € {donationType === "monthly" ? "monatlich" : "einmalig"} unterstützen</button>
-          <p className="modal-disclaimer">Noch keine Zahlung: Der Checkout wird erst nach Konfiguration des Zahlungsanbieters aktiviert. Keine automatische Abbuchung.</p>
+          <button className="modal-submit" disabled={donationLoading} onClick={startDonation}>{donationLoading ? "Checkout wird vorbereitet …" : `Mit ${amount} € ${donationType === "monthly" ? "monatlich" : "einmalig"} unterstützen`}</button>
+          {donationMessage && <p role="alert" className="modal-disclaimer" style={{ color: "#b33b31" }}>{donationMessage}</p>}
+          <p className="modal-disclaimer">Die Zahlung wird sicher über Stripe abgewickelt. Eine wiederkehrende Unterstützung kannst du jederzeit über Stripe kündigen.</p>
         </section>
       </div>}
     </main>
