@@ -51,12 +51,19 @@ export async function ingestConfiguredFeeds() {
         const fingerprint = createHash("sha256").update(link).digest("hex").slice(0, 12);
         const slug = `${slugify(title)}-${fingerprint}`;
         const exists = await prisma.article.findUnique({ where: { slug }, select: { id: true } });
-        if (exists) { skipped++; continue; }
+        if (exists) {
+          await prisma.articleSource.upsert({
+            where: { articleId_sourceId: { articleId: exists.id, sourceId: source.id } },
+            update: { sourceUrl: link, title },
+            create: { articleId: exists.id, sourceId: source.id, sourceUrl: link, title },
+          });
+          skipped++;
+          continue;
+        }
 
-        const rawText = item.contentSnippet || item.summary || item.content || "";
-        const cleanText = rawText.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+        const rawText = item.contentSnippet || item.summary || "";
+        const cleanText = rawText.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 1200);
         const published = item.isoDate ? new Date(item.isoDate) : new Date();
-        const publishedAt = Number.isNaN(published.getTime()) ? new Date() : published;
         const imageUrl = item.enclosure?.url || null;
 
         const article = await prisma.article.create({
@@ -68,7 +75,7 @@ export async function ingestConfiguredFeeds() {
             category: "Aktuell",
             status: "DRAFT",
             imageUrl,
-            sourcePublishedAt: published,
+            sourcePublishedAt: Number.isNaN(published.getTime()) ? new Date() : published,
             sources: { create: { sourceId: source.id, sourceUrl: link, title } },
           },
         });
